@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>2025NepCTF</title>
+      <link href="/2025/08/01/2025NepCTF/"/>
+      <url>/2025/08/01/2025NepCTF/</url>
+      
+        <content type="html"><![CDATA[<p>开始复现</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> CTF </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> all </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>CADE-Detecting and Explaining Concept Drift Samples for Security Applications</title>
       <link href="/2024/07/09/CADE/"/>
       <url>/2024/07/09/CADE/</url>
@@ -13,14 +38,14 @@
       
       <categories>
           
-          <category> 未知攻击检测 </category>
+          <category> 科研 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> sci </tag>
+            <tag> 未知攻击检测 </tag>
             
             <tag> attack detect </tag>
             
@@ -40,7 +65,7 @@
       
       <categories>
           
-          <category> pwn </category>
+          <category> CTF </category>
           
       </categories>
       
@@ -58,31 +83,6 @@
     
     
     <entry>
-      <title>pwnTest</title>
-      <link href="/2024/07/01/pwnTest/"/>
-      <url>/2024/07/01/pwnTest/</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-      
-      <categories>
-          
-          <category> pwn </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> pwn </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Hello World</title>
       <link href="/2024/07/01/hello-world/"/>
       <url>/2024/07/01/hello-world/</url>
@@ -92,14 +92,12 @@
       
       <categories>
           
-          <category> links </category>
+          <category> test </category>
           
       </categories>
       
       
         <tags>
-            
-            <tag> ctf </tag>
             
             <tag> test </tag>
             
