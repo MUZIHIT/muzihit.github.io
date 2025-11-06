@@ -1,0 +1,5 @@
+options:
+  lineNumbers: true
+  imagePath: /static/img
+editor:
+  lineNumbers: true

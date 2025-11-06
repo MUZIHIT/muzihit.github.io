@@ -1,0 +1,37 @@
+#flink_style: flexcard || butterfly 两个里面选一个
+- class_name: Forever
+  flink_style: butterfly
+  link_list:
+    - name: Swizzer
+      link: https://blog.swizzer.cc/
+      avatar: https://blog.swizzer.cc/_astro/avatar.BFetaUI1_15TkGj.webp
+      descr: our Crypto axis
+    - name: cheng_xing
+      link: https://sakuraraindrop.github.io/
+      avatar: https://sakuraraindrop.github.io/img/ltx.jpg
+      descr: our Web axis
+    - name: oldkingOK
+      link: https://oldkingok.cc/share/index
+      avatar: https://r2proxy.oldkingok.cc/icon.png
+      descr: our Reverse axis
+    - name: Ya0
+      link: https://ya0rk.github.io/
+      avatar: https://ya0rk.github.io/img/avatar.jpg
+      descr: Great Coder
+    - name: Doctxing
+      link: https://let.doctxing.win/
+      avatar: https://let.doctxing.win/image/avatar.webp
+      descr: Dr. Xing
+
+# - class_name: 网站
+#   flink_style: butterfly
+#   class_desc: 值得推荐的网站
+#   link_list:
+#     - name: Youtube
+#       link: https://www.youtube.com/
+#       avatar: https://i.loli.net/2020/05/14/9ZkGg8v3azHJfM1.png
+#       descr: 视频网站
+#     - name: Weibo
+#       link: https://www.weibo.com/
+#       avatar: https://i.loli.net/2020/05/14/TLJBum386vcnI1P.png
+#       descr: 中国最大社交分享平台
