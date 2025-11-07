@@ -29,7 +29,7 @@ Visual Studio-like style based on original C# coloring by Jason Diamond <jason@d
 .hljs-built_in,
 .hljs-name,
 .hljs-tag {
-  color: #00f;
+  color: rgb(3, 122, 232);
 }
 
 .hljs-string,
