@@ -1,0 +1,423 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>pwn-tricks | Keyboard's Blog</title><meta name="author" content="Keyboard"><meta name="copyright" content="Keyboard"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="该文档主要收录一些我觉得讲的很好的一些关于pwn的trick（为便于学习参与学习的大家可以在最后自增一列用于标记自己的学习进度，记录一下自己哪些是看过的了hhhhhhhhhhhhhhhhh）    tick name url keyboard看过了？    堆漏洞挖掘中malloc_consolidate与FASTBIN_CONSOLIDATION_THRESHOLD https:&#x2F;&#x2F;blog.c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="pwn-tricks">
+<meta property="og:url" content="https://muzihit.github.io/2024/07/01/pwn-tricks/index.html">
+<meta property="og:site_name" content="Keyboard&#39;s Blog">
+<meta property="og:description" content="该文档主要收录一些我觉得讲的很好的一些关于pwn的trick（为便于学习参与学习的大家可以在最后自增一列用于标记自己的学习进度，记录一下自己哪些是看过的了hhhhhhhhhhhhhhhhh）    tick name url keyboard看过了？    堆漏洞挖掘中malloc_consolidate与FASTBIN_CONSOLIDATION_THRESHOLD https:&#x2F;&#x2F;blog.c">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://muzihit.github.io/static/pwn_tricks/cover.png">
+<meta property="article:published_time" content="2024-07-01T09:37:24.000Z">
+<meta property="article:modified_time" content="2025-11-07T01:09:08.335Z">
+<meta property="article:author" content="Keyboard">
+<meta property="article:tag" content="pwn">
+<meta property="article:tag" content="trick">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://muzihit.github.io/static/pwn_tricks/cover.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "pwn-tricks",
+  "url": "https://muzihit.github.io/2024/07/01/pwn-tricks/",
+  "image": "https://muzihit.github.io/static/pwn_tricks/cover.png",
+  "datePublished": "2024-07-01T09:37:24.000Z",
+  "dateModified": "2025-11-07T01:09:08.335Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Keyboard",
+      "url": "https://muzihit.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/static/img/head.jpg"><link rel="canonical" href="https://muzihit.github.io/2024/07/01/pwn-tricks/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'pwn-tricks',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/static/css/custom.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/static/img/head.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">7</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-graduation-cap"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 科研</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/pwn/"><i class="fa-fw fa fa-close"></i><span> PWN</span></a></li><li><a class="site-page child" href="/reverse/"><i class="fa-fw fa fa-camera-retro"></i><span> 逆向</span></a></li><li><a class="site-page child" href="/crypto/"><i class="fa-fw fa fa-music"></i><span> 隐私计算</span></a></li><li><a class="site-page child" href="/ai/"><i class="fa-fw fas fa-video"></i><span> AI</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/../static/pwn_tricks/cover.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Keyboard's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">pwn-tricks</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-graduation-cap"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 科研</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/pwn/"><i class="fa-fw fa fa-close"></i><span> PWN</span></a></li><li><a class="site-page child" href="/reverse/"><i class="fa-fw fa fa-camera-retro"></i><span> 逆向</span></a></li><li><a class="site-page child" href="/crypto/"><i class="fa-fw fa fa-music"></i><span> 隐私计算</span></a></li><li><a class="site-page child" href="/ai/"><i class="fa-fw fas fa-video"></i><span> AI</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">pwn-tricks</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-07-01T09:37:24.000Z" title="发表于 2024-07-01 17:37:24">2024-07-01</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-11-07T01:09:08.335Z" title="更新于 2025-11-07 09:09:08">2025-11-07</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/CTF/">CTF</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>该文档主要收录一些我觉得讲的很好的一些关于pwn的trick<br />（为便于学习参与学习的大家可以在最后自增一列用于标记自己的学习进度，记录一下自己哪些是看过的了hhhhhhhhhhhhhhhhh）<br /></p>
+<table>
+<thead>
+<tr>
+<th>tick name</th>
+<th>url</th>
+<th>keyboard看过了？</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>堆漏洞挖掘中malloc_consolidate与FASTBIN_CONSOLIDATION_THRESHOLD</td>
+<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_41453285/article/details/97627411">https://blog.csdn.net/qq_41453285&#x2F;article&#x2F;details&#x2F;97627411</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>Glibc PWN“堆风水”应用详解</td>
+<td><a target="_blank" rel="noopener" href="https://www.freebuf.com/vuls/235626.html">https://www.freebuf.com/vuls/235626.html</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>关于fastbin合并问题的研究</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-257742.htm">https://bbs.kanxue.com/thread-257742.htm</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>PWN题目中malloc_consolidate()利用浅析</td>
+<td><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844903816031125518">https://juejin.cn/post/6844903816031125518</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>the house of rabbit（超详细）</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-280246.htm">https://bbs.kanxue.com/thread-280246.htm</a></td>
+<td>0</td>
+</tr>
+<tr>
+<td>堆喷射技术入门</td>
+<td><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000044165958">https://segmentfault.com/a/1190000044165958</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>堆喷思想在glibc pwn中的应用</td>
+<td><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/7189?time__1311=n4+xnD0GDtKx9lDuDBqroGktkGQG8RSQmYeD&alichlgref=https://www.freebuf.com/">https://xz.aliyun.com/t/7189?time__1311&#x3D;n4%2BxnD0GDtKx9lDuDBqroGktkGQG8RSQmYeD&amp;alichlgref&#x3D;https%3A%2F%2Fwww.freebuf.com%2F</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>Heap Spray：高危漏洞的垫脚石</td>
+<td><a target="_blank" rel="noopener" href="https://www.cnblogs.com/Fang3s/articles/3911561.html">https://www.cnblogs.com/Fang3s/articles/3911561.html</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>TSCTF2019 薛定谔的堆块-HeapSpray</td>
+<td><a target="_blank" rel="noopener" href="https://pig-007.github.io/2021/08/18/TSCTF2019%20%E8%96%9B%E5%AE%9A%E8%B0%94%E7%9A%84%E5%A0%86%E5%9D%97-HeapSpray/#2-%E6%BC%8F%E6%B4%9E%E5%8F%91%E7%8E%B0%EF%BC%9A">https://pig-007.github.io/2021/08/18/TSCTF2019%20%E8%96%9B%E5%AE%9A%E8%B0%94%E7%9A%84%E5%A0%86%E5%9D%97-HeapSpray/#2-%E6%BC%8F%E6%B4%9E%E5%8F%91%E7%8E%B0%EF%BC%9A</a></td>
+<td>1,考虑复现</td>
+</tr>
+<tr>
+<td>IO_FILE利用：利用_IO_2_1_stdout泄露libc</td>
+<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_41202237/article/details/113845320">https://blog.csdn.net/qq_41202237&#x2F;article&#x2F;details&#x2F;113845320</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>House of pig 原理详解&amp;实战（高版本IO_FILE）–比较复杂的攻击</td>
+<td><a target="_blank" rel="noopener" href="http://t.csdnimg.cn/axITU">http://t.csdnimg.cn/axITU</a></td>
+<td>0，考虑复现</td>
+</tr>
+<tr>
+<td>Tcache Stashing Unlink Attack 原理详解</td>
+<td><a target="_blank" rel="noopener" href="http://t.csdnimg.cn/vIJJP">http://t.csdnimg.cn/vIJJP</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>Heap Exploit 2.31</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/StarCross-Tech/heap_exploit_2.31">https://github.com/StarCross-Tech/heap_exploit_2.31</a></td>
+<td>0考虑复现</td>
+</tr>
+<tr>
+<td>glibc-2.31中的tcache stashing unlink与large bin attack</td>
+<td><a target="_blank" rel="noopener" href="http://t.csdnimg.cn/01drX">http://t.csdnimg.cn/01drX</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>house of  banana</td>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/222948#h3-5">https://www.anquanke.com/post/id/222948#h3-5</a></td>
+<td>0</td>
+</tr>
+<tr>
+<td>浅入研究 tcache_perthread_struct</td>
+<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_29912475/article/details/134978851">https://blog.csdn.net/qq_29912475&#x2F;article&#x2F;details&#x2F;134978851</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>通过mmap&amp;mprotect来绕过nx</td>
+<td><a target="_blank" rel="noopener" href="http://t.csdnimg.cn/WgOng">http://t.csdnimg.cn/WgOng</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>house of fmt 非栈上的fmt</td>
+<td><a target="_blank" rel="noopener" href="https://www.freebuf.com/vuls/284210.html">https://www.freebuf.com/vuls/284210.html</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>[CTF]PWN–非栈上格式化字符串漏洞</td>
+<td><a target="_blank" rel="noopener" href="http://t.csdnimg.cn/4sILP">http://t.csdnimg.cn/4sILP</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>[CTF]PWN–手搓格式化字符串漏洞</td>
+<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/2301_79880752/article/details/136178764?spm=1001.2014.3001.5501">https://blog.csdn.net/2301_79880752&#x2F;article&#x2F;details&#x2F;136178764?spm&#x3D;1001.2014.3001.5501</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>house of apple 1-2-3</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-273418.htm">https://bbs.kanxue.com/thread-273418.htm</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/235598">house of kiwi</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/235598">house of kiwi</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/260614">house of emma</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/260614">house of emma</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/242640">house of pig</a></td>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/242640">house of pig</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>House of cat新型glibc中IO利用手法解析 &amp;&amp; 第六届强网杯House of cat详解</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-273895.htm">https://bbs.kanxue.com/thread-273895.htm</a></td>
+<td>0</td>
+</tr>
+<tr>
+<td>堆利用详解：the house of storm</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-280333.htm">https://bbs.kanxue.com/thread-280333.htm</a></td>
+<td>0</td>
+</tr>
+<tr>
+<td>深入理解Pwn_IO_FILE及相关赛题</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-279380.htm">https://bbs.kanxue.com/thread-279380.htm</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>深入理解Pwn_Heap及相关例题</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-278871.htm">https://bbs.kanxue.com/thread-278871.htm</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>Tcache安全机制及赛题详细解析(gundam &amp;&amp; House of Atum)</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-278105.htm">https://bbs.kanxue.com/thread-278105.htm</a></td>
+<td>0</td>
+</tr>
+<tr>
+<td>第七届“湖湘杯” House _OF _Emma &#124; 设计思路与解析</td>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/260614">https://www.anquanke.com/post/id/260614</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>House OF Kiwi</td>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/235598">https://www.anquanke.com/post/id/235598</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>多手法联合IO利用之House of pig 学习利用</td>
+<td><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/12916?time__1311=mqmhqIx+xkGNDQtPBKPAKY0KD=WDtes3C4D&alichlgref=https://xz.aliyun.com/t/12934?time__1311=mqmhqIx%252Bxfx0hxBqDTWxUE%253Dx9DAOq6rCoD&alichlgref=https%253A%252F%252Fcn.bing.com%252F">https://xz.aliyun.com/t/12916?time__1311&#x3D;mqmhqIx%2BxkGNDQtPBKPAKY0KD%3DWDtes3C4D&amp;alichlgref&#x3D;https%3A%2F%2Fxz.aliyun.com%2Ft%2F12934%3Ftime__1311%3DmqmhqIx%252Bxfx0hxBqDTWxUE%253Dx9DAOq6rCoD%26alichlgref%3Dhttps%253A%252F%252Fcn.bing.com%252F</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>glibc 2.31 pwn——house of pig原题分析与示例程序</td>
+<td><a target="_blank" rel="noopener" href="http://t.csdnimg.cn/BiNVQ">http://t.csdnimg.cn/BiNVQ</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>i春秋2020新春战役PWN之BFnote (修改TLS结构来bypass canary)</td>
+<td><a target="_blank" rel="noopener" href="http://t.csdnimg.cn/dC98r">http://t.csdnimg.cn/dC98r</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>roarctf 2020 PWN 2a1—虚表指针加密问题</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-264469.htm">https://bbs.kanxue.com/thread-264469.htm</a></td>
+<td>0</td>
+</tr>
+<tr>
+<td>新版本glibc下的IO_FILE攻击</td>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/216290">https://www.anquanke.com/post/id/216290</a></td>
+<td>0</td>
+</tr>
+<tr>
+<td>通过LIBC基址来爆破TLS</td>
+<td><a target="_blank" rel="noopener" href="https://blog.wjhwjhn.com/posts/%e9%80%9a%e8%bf%87libc%e5%9f%ba%e5%9d%80%e6%9d%a5%e7%88%86%e7%a0%b4tls/">https://blog.wjhwjhn.com/posts/%e9%80%9a%e8%bf%87libc%e5%9f%ba%e5%9d%80%e6%9d%a5%e7%88%86%e7%a0%b4tls/</a></td>
+<td>0</td>
+</tr>
+<tr>
+<td>从两道题目学习 exit_hook</td>
+<td><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/576942474">https://zhuanlan.zhihu.com/p/576942474</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>malloc_printerr劫持</td>
+<td><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-272471.htm#msg_header_h1_3">https://bbs.kanxue.com/thread-272471.htm#msg_header_h1_3</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td>house of husk</td>
+<td><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/202387">https://www.anquanke.com/post/id/202387</a></td>
+<td>1</td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+<tr>
+<td><br /></td>
+<td></td>
+<td><br /></td>
+</tr>
+</tbody></table>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://muzihit.github.io">Keyboard</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://muzihit.github.io/2024/07/01/pwn-tricks/">https://muzihit.github.io/2024/07/01/pwn-tricks/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://muzihit.github.io" target="_blank">Keyboard's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/pwn/">pwn</a><a class="post-meta__tags" href="/tags/trick/">trick</a></div><div class="post-share"><div class="social-share" data-image="/../static/pwn_tricks/cover.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2024/07/09/CADE/" title="CADE-Detecting and Explaining Concept Drift Samples for Security Applications"><img class="cover" src="/../static/CADE/cover.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">CADE-Detecting and Explaining Concept Drift Samples for Security Applications</div></div><div class="info-2"><div class="info-item-1">发表会议：USENIXSec 2021 代码地址：https://github.com/whyisyoung/CADE 引子为了对抗概念漂移的问题，设计一个模型CADE来实现对漂移样本的检测以及分类。 检测偏离现有类的漂移样本提供解释来解释检测到的漂移。漂移检测模块：负责监测输入原分类模型中的数据是否存在问题，即检测漂移数据解释漂移模块：训练了一个基于距离的语义解释函数来对发现的漂移数据进行解释，并未是否需要对模型进行再训练提供一个参考。 由于概念漂移，部署基于机器学习的安全应用可能非常具有挑战性。无论是恶意软件分类、入侵检测，还是在线滥用检测，基于学习的模型都是在”封闭世界”假设下工作的，希望测试数据的分布与训练数据的分布大致匹配。然而，模型部署的环境通常是随时间动态变化的。这种变化既可能包括良性玩家的有机行为变化，也可能包括攻击者的恶意突变和适应。因此，测试数据分布正在从原始训练数据中转移，这可能会导致模型出现严重的故障。为了解决概念漂移问题，大多数基于学习的模型需要定期重新训练。然而，再训练往往需要标注大量的新样本(代价昂贵)。更重要的是，也很难确定何时应该重新训练模型。延...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/08/02/2022-TQLCTF-Unbelievable-write/" title="2022_TQLCTF_Unbelievable_write"><img class="cover" src="/../static/2022_TQLCTF_Unbelievable_write/cover.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-08-02</div><div class="info-item-2">2022_TQLCTF_Unbelievable_write</div></div><div class="info-2"><div class="info-item-1">看一下保护  程序got表可写，无pie，libc版本为2.31，有tcache  看下main，一个菜单题，c1 c2 c3 三个选项。  初始化函数设置了ptr为一个0x10大小的堆块，为全局变量  c1函数为一个可控大小的malloc，向其读入内容之后立刻free掉，此处为与大多数题目不一样的地方，因为malloc之后立刻free，所以在tcache attack的时候需要绕过free的重重检查。  c2函数为一个可控地址的free，借助ptr，堆地址完全可控，该free可以访问到任意堆地址  c3为后门函数，检查全局变量target是否被修改，若被修改了则得到flag。 分析到这里，本challenge正如题目所描述，我们的目的是达成一次unbelievable write，即向target中写入数据。 这里给出一个非预期解，打tcache控制块tcache perthread struct，该控制块位于堆地址首部，与ptr存在固定偏移，因此我们可以利用一次free将其释放，然后通过修改tcache控制块内容实现tcache attack，达到任意地址堆块分配。则只需分配...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/static/img/head.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Keyboard</div><div class="author-info-description">I will pwn the world</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">7</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/MUZIHIT"><i class="fab fa-github"></i><span>我的Github地址</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/07/2025NepCTF%20copy/" title="2025N1CTF">2025N1CTF</a><time datetime="2025-11-07T03:20:17.000Z" title="发表于 2025-11-07 11:20:17">2025-11-07</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/09/09/DRDos/" title="Careless Retention and Management-Understanding and Detecting Data Retention Denial-of-Service Vulnerabilities in Java Web Containers"><img src="/../static/DRDos/cover.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Careless Retention and Management-Understanding and Detecting Data Retention Denial-of-Service Vulnerabilities in Java Web Containers"/></a><div class="content"><a class="title" href="/2025/09/09/DRDos/" title="Careless Retention and Management-Understanding and Detecting Data Retention Denial-of-Service Vulnerabilities in Java Web Containers">Careless Retention and Management-Understanding and Detecting Data Retention Denial-of-Service Vulnerabilities in Java Web Containers</a><time datetime="2025-09-09T03:26:31.000Z" title="发表于 2025-09-09 11:26:31">2025-09-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/09/09/JAEX/" title="Towards Automatic Detection and Exploitation of Java Web Application Vulnerabilities via Concolic Execution guided by Cross-thread Object Manipulation"><img src="/../static/JAEX/cover.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Towards Automatic Detection and Exploitation of Java Web Application Vulnerabilities via Concolic Execution guided by Cross-thread Object Manipulation"/></a><div class="content"><a class="title" href="/2025/09/09/JAEX/" title="Towards Automatic Detection and Exploitation of Java Web Application Vulnerabilities via Concolic Execution guided by Cross-thread Object Manipulation">Towards Automatic Detection and Exploitation of Java Web Application Vulnerabilities via Concolic Execution guided by Cross-thread Object Manipulation</a><time datetime="2025-09-09T03:19:32.000Z" title="发表于 2025-09-09 11:19:32">2025-09-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/08/02/2022-TQLCTF-Unbelievable-write/" title="2022_TQLCTF_Unbelievable_write"><img src="/../static/2022_TQLCTF_Unbelievable_write/cover.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="2022_TQLCTF_Unbelievable_write"/></a><div class="content"><a class="title" href="/2025/08/02/2022-TQLCTF-Unbelievable-write/" title="2022_TQLCTF_Unbelievable_write">2022_TQLCTF_Unbelievable_write</a><time datetime="2025-08-01T16:23:39.000Z" title="发表于 2025-08-02 00:23:39">2025-08-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/08/01/2025NepCTF/" title="2025NepCTF"><img src="/../static/2025_NepCTF/cover.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="2025NepCTF"/></a><div class="content"><a class="title" href="/2025/08/01/2025NepCTF/" title="2025NepCTF">2025NepCTF</a><time datetime="2025-08-01T08:24:17.000Z" title="发表于 2025-08-01 16:24:17">2025-08-01</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 By Keyboard</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

