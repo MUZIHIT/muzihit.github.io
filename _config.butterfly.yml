@@ -126,22 +126,26 @@ menu:
   友链: /links/ || fa fa-link
   留言板: /comment/ || fa fa-paper-plane
   #留言板: /messageboard/ || fa fa-paper-plane
-  关于笔者: /about/ || fas fa-heart  
-highlight_theme: mac  #  darker / pale night / light / ocean / mac / mac light / false 代码主题
+  关于笔者: /about/ || fas fa-heart 
+ 
+highlight_theme: false  #  darker / pale night / light / ocean / mac / mac light / false 代码主题
 highlight_copy: true # 复制按钮
-highlight_lang: false # 是否显示代码语言
-highlight_shrink: false # true: 代码块默认不展开 / false: 代码块默认展开 | none: 展开并隐藏折叠按钮
+highlight_lang: true # 是否显示代码语言
+highlight_shrink: true # true: 代码块默认不展开 / false: 代码块默认展开 | none: 展开并隐藏折叠按钮
 highlight_height_limit: false # unit: px
 code_word_wrap: true #代码自动换行，关闭滚动条
 
+inject:
+  head:
+    - <link rel="stylesheet" href="/static/css/custom.css">
 
 # Favicon（网站图标）
-favicon: /img/head.jpg
+favicon: /static/img/head.jpg
 avatar:
-  img: /img/head.jpg #图片路径
+  img: /static/img/head.jpg #图片路径
   effect: false #头像会一直转圈  
 # The banner image of home page
-index_img: /img/boki.webp
+index_img: /static/img/boki.webp
 
 # Local search
 local_search:

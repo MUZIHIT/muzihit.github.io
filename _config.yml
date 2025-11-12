@@ -45,16 +45,17 @@ relative_link: false
 future: true
 syntax_highlighter: highlight.js
 highlight:
-  enable: false
-  line_number: false
-  auto_detect: false
-  tab_replace: ''
-  wrap: true
-  hljs: false
+ enable: true
+ line_number: true
+ auto_detect: false
+ tab_replace:
+ hljs: true
 prismjs:
   preprocess: true
   line_number: true
   tab_replace: ''
+
+
 
 # Home page setting
 # path: Root path for your blogs index page. (default = '')
@@ -105,10 +106,3 @@ deploy:
   type: git
   repository: git@github.com:MUZIHIT/muzihit.github.io.git #你的GitHub的仓库地址
   branch: main  #主分支的名字
-admin:
-  username: keyboard
-  password: keyboard
-  port: 5000
-  base_url: /
-  secret: keyboard
-  deploy_command: 'hexo generate && hexo deploy'
