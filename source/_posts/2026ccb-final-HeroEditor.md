@@ -28,7 +28,7 @@ void __fastcall __noreturn main(int a1, char **a2, char **a3)
 }
 ```
 程序开了沙箱
-![sandbox](source/static/2026ccb-final-HeroEditor/1.png)
+![sandbox](../static/2026ccb-final-HeroEditor/1.png)
 
 ```c
 void __noreturn vuln()
@@ -240,7 +240,7 @@ __int64 __fastcall sub_1278(__int64 a1, __int64 a2)
 
 程序本身没有啥控制rdi的gadget，思路很自然地要想怎么能拿到一个脏的寄存器上下文。ida可以看到rules函数和menu函数都是只是输出了一些信息，没有其他操作，也没有这个特殊的exit的hook检查，因此它们的栈帧上下文应该就是脏的，经过调试，果然如此：
 menu的栈帧rdi包含一个多重栈地址指针，因此可以被用于泄露栈地址（rules不行，可能是menu里面最后有个printf导致的，原来这竟然是伏笔吗？）
-![menu-stack](source/static/2026ccb-final-HeroEditor/2.png)
+![menu-stack](../static/2026ccb-final-HeroEditor/2.png)
 
 这一步感觉会是难住绝大部分选手的点，这步过了后面泄露libc就简单了，直接劫持到pie+0x148c来write就行，rbp可以自己控制来设置好rbp-0x18的值，表示write的大小，然后check过不了直接打印rodata的数据，一直往后泄露到got就可以了
 拿到libc之后就打orw。
@@ -396,6 +396,6 @@ r.send(payload)
 r.interactive()
 
 ```
-![result](source/static/2026ccb-final-HeroEditor/3.png)
+![result](../static/2026ccb-final-HeroEditor/3.png)
 
 
